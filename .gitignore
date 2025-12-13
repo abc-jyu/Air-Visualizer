@@ -1,3 +1,6 @@
+# 会話内容のデータベースの削除
+log.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
