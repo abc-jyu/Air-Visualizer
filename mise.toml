@@ -1,0 +1,12 @@
+[tools]
+python = "3.12"
+node = "lts"
+pnpm = "latest"
+uv = "latest"
+
+[tasks]
+"setup:backend" = { run = "uv pip install -r requirements.txt", dir = "backend" }
+"setup:extension" = { run = "pnpm install", dir = "extension" }
+setup = { depends = ["setup:backend", "setup:extension"] }
+"start:backend" = { run = "uv run uvicorn app.main:app --reload", dir = "backend" }
+"start:extension" = { run = "pnpm dev", dir = "extension" }
