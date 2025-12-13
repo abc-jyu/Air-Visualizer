@@ -10,7 +10,7 @@ export const config: PlasmoCSConfig = {
 }
 
 const MeetObserver = () => {
-    const { ws, status, setStatus } = useWebSocket("ws://localhost:8080/ws")
+    const { ws, status, setStatus } = useWebSocket("ws://localhost:8000/ws")
 
     useTranscriptObserver(ws, status, setStatus)
 
