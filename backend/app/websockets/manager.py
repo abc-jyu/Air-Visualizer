@@ -1,3 +1,4 @@
+# WebSocket接続の管理
 from fastapi import WebSocket
 from typing import List
 

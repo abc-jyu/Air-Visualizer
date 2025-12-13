@@ -1,3 +1,4 @@
+# WebSocketのルーティングとメッセージ処理ロジック
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.websockets.manager import manager
 from app.models.session import AsyncSessionLocal

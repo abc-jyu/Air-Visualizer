@@ -1,4 +1,4 @@
-
+# アプリケーションの設定管理
 class Settings:
     PROJECT_NAME: str = "Air-Visualizer Backend"
     VERSION: str = "0.1.0"

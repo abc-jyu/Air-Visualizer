@@ -1,3 +1,4 @@
+# トランスクリプト（議事録）のデータモデル
 from sqlalchemy import Column, Integer, String, DateTime, Text
 from datetime import datetime
 from app.models.session import Base

@@ -1,3 +1,4 @@
+# /transcripts エンドポイントに対してPOSTリクエストを送信し、APIの動作確認を行うためのスクリプト
 import requests
 import datetime
 

@@ -1,3 +1,4 @@
+# FastAPIアプリケーションのエントリーポイント
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from app.core.config import settings
 from app.websockets import router as ws_router

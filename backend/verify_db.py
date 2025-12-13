@@ -1,3 +1,4 @@
+# データベースに保存されたトランスクリプトを確認するためのユーティリティスクリプト
 import asyncio
 from sqlalchemy import select
 from app.models.session import AsyncSessionLocal
