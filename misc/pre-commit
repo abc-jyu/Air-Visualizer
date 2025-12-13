@@ -5,7 +5,7 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Check if the current branch is 'main'
 if [ "$current_branch" = "main" ]; then
-  echo "Error: 直接mainブランチへのコミットを禁止しています。Featureブランチを作成してPull Requestを提出してください。詳しくはREADMEを参照してください。"
+  echo "Error: 直接mainブランチへのコミットを禁止しています。Featureブランチを作成してPull Requestを提出してください。詳しくはリンクを参照してください。https://github.com/abc-jyu/Air-Visualizer/blob/feature/5/docs/TEAM_DEVELOPMENT_GUIDE.md#%E3%83%88%E3%83%A9%E3%83%96%E3%83%AB%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0:~:text=%E3%83%9D%E3%82%A4%E3%83%B3%E3%83%88%E3%82%92%E8%BF%BD%E5%8A%A0-,%E3%83%88%E3%83%A9%E3%83%96%E3%83%AB%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0,-main%20%E3%83%96%E3%83%A9%E3%83%B3%E3%83%81%E3%81%B8"
   exit 1
 fi
 

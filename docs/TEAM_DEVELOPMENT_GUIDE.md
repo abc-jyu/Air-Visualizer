@@ -60,6 +60,34 @@
     - プレフィックスをつけることを推奨します（例: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`）。
     - 例: `feat: 会話の保存APIエンドポイントを追加`
 
+### トラブルシューティング
+
+#### `main` ブランチへのコミットエラー
+`main` ブランチ上で `git commit` を実行すると、以下のエラーが表示されることがあります。
+
+![mainブランチでコミットするときのエラー](./imgs/commit-error.png)
+
+これは、誤って `main` ブランチに直接コミットすることを防ぐためのフック（Git Hook）が作動しているためです。
+
+**対処法:**
+作業用の新しいブランチを作成して、そこにコミットしてください。
+
+```bash
+# 1. 新しいブランチを作成して移動（ステージング済みの変更も引き継がれます）
+git checkout -b feature/<issue-number>
+
+```
+issue-numberはissueから番号を取得できます。
+(画像要参照)
+
+![alt text](./imgs/issue-number.png)
+この画像だとブランチ名は、feature/5となります。
+
+```bash
+# 2. 改めてコミットする
+git commit -m "feat: 変更内容"
+```
+
 ## 3. Pull Request (PR) ルール
 
 PRはコードレビューを行う重要な場です。レビュアーが理解しやすいPR作成を心がけましょう。
