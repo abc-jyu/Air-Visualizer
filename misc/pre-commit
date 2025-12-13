@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Get the current branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if the current branch is 'main'
+if [ "$current_branch" = "main" ]; then
+  echo "Error: 直接mainブランチへのコミットを禁止しています。Featureブランチを作成してPull Requestを提出してください。詳しくはREADMEを参照してください。"
+  exit 1
+fi
+
+exit 0
