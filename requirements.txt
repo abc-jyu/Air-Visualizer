@@ -1,0 +1,5 @@
+# This requirements.txt file was auto-generated from pyproject.toml as of 2025-12-21.
+aiosqlite==0.17.0
+fastapi==0.99.0
+pydantic==1.10.12
+aiohttp==3.8.6
