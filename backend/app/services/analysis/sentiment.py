@@ -54,7 +54,9 @@ async def initialize_sentiment_model() -> None:
 
     except Exception as e:
         print(f"✗ Failed to load sentiment model: {e}")
-        raise
+        import traceback
+        traceback.print_exc()
+        # Don't raise - allow app to start without sentiment analysis
 
 
 async def analyze_sentiment(text: str) -> Dict[str, float]:
