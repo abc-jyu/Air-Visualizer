@@ -1,11 +1,10 @@
 # FastAPIアプリケーションのエントリーポイント
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from app.core.config import settings
 from app.websockets import router as ws_router
 from app.schemas import TranscriptCreate
 from app.models.transcript import Transcript
-from app.models.session import AsyncSessionLocal
-from app.models.session import init_db
+from app.models.session import AsyncSessionLocal, init_db
 from app.services.analysis.sentiment import initialize_sentiment_model, shutdown_sentiment_model
 from app.services.analysis.audio import test_audio_processing
 import uvicorn
