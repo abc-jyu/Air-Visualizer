@@ -22,91 +22,122 @@ export const useTranscriptObserver = (
                     text: transcriptTextBuffer.current,
                     timestamp: timestampBuffer.current
                 }
-                console.log(`Air-Visualizer: Sending:`, JSON.stringify(data))
-                ws.send(JSON.stringify(data))
+                try {
+                    console.log(`Air-Visualizer: Sending:`, JSON.stringify(data))
+                    ws.send(JSON.stringify(data))
+                } catch (e) {
+                    console.warn("Air-Visualizer: Failed to send ws message", e)
+                }
             }
         }
 
-        const observerCallback = (mutations: MutationRecord[]) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === "characterData") {
-                    const target = mutation.target as Node
-                    const parentElement = target.parentElement
-
-                    // Logic ported from transcriptonic
-                    // Structure: <div>(Name)</div><div>(Text)</div>
-                    // mutation.target is the Text Node inside the second div.
-                    // parentElement is the second div.
-                    // previousSibling is the first div (Name).
-                    const currentPersonName = parentElement?.previousSibling?.textContent
-                    const currentTranscriptText = parentElement?.textContent
-
-                    if (currentPersonName && currentTranscriptText) {
-                        // Starting fresh in a meeting or new block
-                        if (!transcriptTargetBuffer.current) {
-                            transcriptTargetBuffer.current = parentElement
-                            personNameBuffer.current = currentPersonName
-                            timestampBuffer.current = new Date().toISOString()
-                            transcriptTextBuffer.current = currentTranscriptText
-                        }
-                        // Some prior transcript buffer exists
-                        else {
-                            // New transcript UI block
-                            if (transcriptTargetBuffer.current !== parentElement) {
-                                // Push previous transcript block (final update for that block)
-                                pushBufferToTranscript()
-
-                                // Update buffers for next mutation
-                                transcriptTargetBuffer.current = parentElement
-                                personNameBuffer.current = currentPersonName
-                                timestampBuffer.current = new Date().toISOString()
-                                transcriptTextBuffer.current = currentTranscriptText
-                            }
-                            // Same transcript UI block being appended
-                            else {
-                                // Update buffer for next mutation
-                                transcriptTextBuffer.current = currentTranscriptText
-                            }
-                        }
-
-                        // Log to indicate that the extension is working (similar to transcriptonic)
-                        if (transcriptTextBuffer.current) {
-                            console.log(`Air-Visualizer: Current Buffer:`, JSON.stringify({
-                                speaker: personNameBuffer.current,
-                                text: transcriptTextBuffer.current
-                            }))
-                        }
-                    }
+        
+        let remoteSelectors: string[] = []
+        const tryFetchSelectors = async () => {
+            try {
+                const controller = new AbortController()
+                const id = setTimeout(() => controller.abort(), 2000)
+                const res = await fetch("http://localhost:8000/config", { signal: controller.signal })
+                clearTimeout(id)
+                if (res.ok) {
+                    const j = await res.json()
+                    if (Array.isArray(j.selectors)) remoteSelectors = j.selectors
                 }
-            })
+            } catch (e) {
+                
+            }
+        }
+
+       
+        const defaultSelectors = [
+            'div[role="region"][tabindex="0"]',
+            'div[aria-label*="captions"]',
+            'div[jsname] > div[jsname]',
+            'div[role="list"]'
+        ]
+
+        const combinedSelectors = () => [...remoteSelectors, ...defaultSelectors]
+
+        const observerCallback = (mutations: MutationRecord[]) => {
+            const processNode = (node: Node | null) => {
+                if (!node) return
+                const el = node instanceof Element ? node : node.parentElement
+                if (!el) return
+                
+                const maybeSpeaker = el.previousElementSibling?.textContent?.trim() || el.querySelector?.("[data-speaker]")?.textContent?.trim()
+                const maybeText = el.textContent?.trim()
+                if (maybeText && maybeSpeaker && maybeSpeaker.length < 60) {
+                   
+                    if (!transcriptTargetBuffer.current || transcriptTargetBuffer.current !== el) {
+                        pushBufferToTranscript()
+                        transcriptTargetBuffer.current = el
+                        personNameBuffer.current = maybeSpeaker
+                        timestampBuffer.current = new Date().toISOString()
+                        transcriptTextBuffer.current = maybeText
+                    } else {
+                       
+                        transcriptTextBuffer.current = maybeText
+                    }
+                    console.log("Air-Visualizer: Current Buffer:", { speaker: personNameBuffer.current, text: transcriptTextBuffer.current })
+                }
+            }
+
+            for (const m of mutations) {
+                if (m.type === "characterData") {
+                    processNode(m.target as Node)
+                }
+                if (m.type === "childList") {
+                    m.addedNodes.forEach((n) => processNode(n))
+                }
+            }
         }
 
         const observer = new MutationObserver(observerCallback)
 
-        const findTranscriptContainer = () => {
-            const transcriptContainer = document.querySelector('div[role="region"][tabindex="0"]')
-            if (transcriptContainer) {
-                console.log("Air-Visualizer: Transcript container found!", transcriptContainer)
-                // Only update status if it's not already "Connected & Listening" to avoid re-renders loop if we were to add it to dependency
-                setStatus((prev) => prev === "Connected" ? "Connected & Listening" : prev)
+        const findTranscriptContainer = async () => {
+            await tryFetchSelectors()
 
-                observer.observe(transcriptContainer, {
-                    childList: true,
-                    attributes: true,
-                    subtree: true,
-                    characterData: true
-                })
-            } else {
-                console.log("Air-Visualizer: Transcript container NOT found, retrying...")
-                setTimeout(findTranscriptContainer, 2000)
+            const selectors = combinedSelectors()
+
+            for (const sel of selectors) {
+                try {
+                    const node = document.querySelector(sel)
+                    if (node) {
+                        console.log("Air-Visualizer: Transcript container found via selector:", sel, node)
+                        setStatus((prev) => (prev === "Connected" ? "Connected & Listening" : prev))
+                        observer.observe(node, { childList: true, attributes: false, subtree: true, characterData: true })
+                        return
+                    }
+                } catch (e) {
+                   
+                    continue
+                }
             }
+
+ 
+            const allDivs = Array.from(document.querySelectorAll("div"))
+            for (const d of allDivs) {
+                const txt = d.textContent?.trim() || ""
+                if (!txt) continue
+              
+                const lines = txt.split(/\n|\r|\.|。|、/).map((s) => s.trim()).filter(Boolean)
+                if (lines.length >= 3 && lines.some((l) => l.length < 120)) {
+                    console.log("Air-Visualizer: Transcript container heuristically found", d)
+                    setStatus((prev) => (prev === "Connected" ? "Connected & Listening" : prev))
+                    observer.observe(d, { childList: true, attributes: false, subtree: true, characterData: true })
+                    return
+                }
+            }
+
+          
+            console.log("Air-Visualizer: Transcript container NOT found, retrying...")
+            setTimeout(findTranscriptContainer, 2000)
         }
 
         findTranscriptContainer()
 
         return () => {
             observer.disconnect()
-            // Push any remaining buffer when disconnecting (e.g. meeting end)
             pushBufferToTranscript()
         }
     }, [ws, status, setStatus])
