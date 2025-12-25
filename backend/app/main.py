@@ -6,7 +6,6 @@ from app.schemas import TranscriptCreate
 from app.models.transcript import Transcript
 from app.models.session import AsyncSessionLocal, init_db
 from app.services.analysis.sentiment import initialize_sentiment_model, shutdown_sentiment_model
-from app.services.analysis.audio import test_audio_processing
 import uvicorn
 
 
@@ -32,18 +31,6 @@ async def on_startup():
         import traceback
         traceback.print_exc()
 
-    # Test audio processing
-    try:
-        audio_ok = await test_audio_processing()
-        if audio_ok:
-            print("✓ Audio processing initialized")
-        else:
-            print("⚠ Audio processing test failed")
-    except Exception as e:
-        print(f"✗ Audio processing error: {e}")
-        import traceback
-        traceback.print_exc()
-
 
 @app.on_event("shutdown")
 async def on_shutdown():
@@ -63,8 +50,7 @@ async def health_check():
     """Health check endpoint to verify services are running"""
     return {
         "status": "ok",
-        "sentiment": "initialized",
-        "audio": "initialized"
+        "sentiment": "initialized"
     }
 
 
