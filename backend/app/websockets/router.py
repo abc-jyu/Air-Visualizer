@@ -30,20 +30,29 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     timestamp = datetime.utcnow()
 
-                # 1. Save transcript to database
+                # 1. Run sentiment analysis first
+                sentiment_result = await analyze_sentiment(text)
+                
+                # Print dominant emotion in red
+                if sentiment_result:
+                    dominant_emotion = max(sentiment_result, key=sentiment_result.get)
+                    dominant_score = sentiment_result[dominant_emotion]
+                    # \033[31m is RED, \033[0m is RESET
+                    print(f"\033[31m[Input] {text}\033[0m")
+                    print(f"\033[31m[Emotion] {dominant_emotion} ({dominant_score:.1%})\033[0m")
+
+                # 2. Save transcript AND sentiment to database
                 async with AsyncSessionLocal() as session:
                     transcript = Transcript(
                         speaker=speaker,
                         text=text,
-                        timestamp=timestamp
+                        timestamp=timestamp,
+                        sentiment_analysis=sentiment_result
                     )
                     session.add(transcript)
                     await session.commit()
                     await session.refresh(transcript)
                     transcript_id = transcript.id
-
-                # 2. Run sentiment analysis
-                sentiment_result = await analyze_sentiment(text)
 
                 # 3. Prepare response
                 response = {
